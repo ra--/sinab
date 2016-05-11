@@ -3,34 +3,29 @@ PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 
 function usage() {
-	echo "Usage: ${0} [ssd|sd]"
+	echo "Usage: ${0} configname"
 	exit 1
 }
 
 if [ $# -ne 1 ]; then
 	usage
-elif [ "${1}" != 'ssd' -a "${1}" != 'sd' ]; then
-	usage
 fi
 
-DISK="${1}"
-
-if [ ! -f /usr/local/etc/snapshots_${DISK}.conf ]; then
+if [ ! -f /usr/local/etc/sinab_${1}.conf ]; then
 	echo 'ERROR: Config file not found!' >/dev/stderr
 	exit 1
 fi
 
-source /usr/local/etc/snapshots_${DISK}.conf
+source /usr/local/etc/sinab_${1}.conf
 
 # execute command, check for errors
 function doit() {
         echo "Executing: \"${1}\""
         nice -n19 ionice -c 3 ${1}
-	#${1}
-	RETURNCODE="${?}"
+    	RETURNCODE="${?}"
         if [ "${RETURNCODE}" -ne 0 ]; then
-		echo "\"${1}\" returned \"${RETURNCODE}\"." >/dev/stderr
-		exit 1
+    		echo "\"${1}\" returned \"${RETURNCODE}\"." >/dev/stderr
+	    	exit 1
         fi
 }
 
