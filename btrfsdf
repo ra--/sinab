@@ -11,7 +11,7 @@ fi
 MNT=`mount | grep "on ${1} type" | awk '{print $1}'`
 MNT_ESC=`echo ${MNT} | sed -e 's,/,\\\/,g'`
 
-ALLOC=`btrfs filesystem show 2> /dev/null | egrep "${MNT}$" | sed -e "s/[ a-z1\t]\+\([0-9.]\+\)GiB used \([0-9.]\+\)GiB path ${MNT_ESC}$/scale=2; \2 \/ \1/" | bc`
+ALLOC=`btrfs filesystem show 2> /dev/null | egrep "${MNT}$" | sed -e "s/[ a-z1\t]\+ size \([0-9.]\+\)GiB used \([0-9.]\+\)GiB path ${MNT_ESC}$/scale=2; \2 \/ \1/" | bc`
 
 if [ -z ${ALLOC} ]; then
   echo "ERROR: Could not read data."
