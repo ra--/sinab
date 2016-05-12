@@ -1,0 +1,45 @@
+#!/bin/sh
+
+#DEBUG=1
+
+if [ ${#} -ne 1 ]; then
+  echo "Usage: ${0} mountpoint"
+  exit 2
+fi
+
+
+MNT=`mount | grep "on ${1} type" | awk '{print $1}'`
+MNT_ESC=`echo ${MNT} | sed -e 's,/,\\\/,g'`
+
+ALLOC=`btrfs filesystem show 2> /dev/null | egrep "${MNT}$" | sed -e "s/[ a-z1\t]\+\([0-9.]\+\)GiB used \([0-9.]\+\)GiB path ${MNT_ESC}$/scale=2; \2 \/ \1/" | bc`
+
+if [ -z ${ALLOC} ]; then
+  echo "ERROR: Could not read data."
+  exit 1
+fi
+
+DATA=`btrfs filesystem df ${1} | sed -e 's/^Data, single: total=\([0-9.]\+\)GiB, used=\([0-9.]\+\)GiB/scale=6; \2 \/ \1/' | egrep '^scale' | bc`
+SYSTEM=`btrfs filesystem df ${1} | sed -e 's/^System\(, DUP\)\?: total=\([0-9.]\+\)MiB, used=\([0-9.]\+\)KiB/scale=6; \3 \/ \2\/1024/' | egrep '^scale' | bc`
+METADATA=`btrfs filesystem df ${1} | sed -e 's/^Metadata\(, DUP\)\?: total=\([0-9.]\+\)GiB, used=\([0-9.]\+\)GiB/scale=6; \3 \/ \2/' | egrep '^scale' | bc`
+
+USAGE=`echo "${METADATA}
+${DATA}
+${SYSTEM}" | sort -n | tail -n 1 | sed -e 's/^\.\([0-9]\{2\}\)[0-9]\+/\1/'`
+
+
+
+echo "${USAGE} * ${ALLOC}" | bc | awk -F '.' '{print $1}'
+
+
+
+
+if [ -n "${DEBUG}" ]; then
+  echo "MNT ${MNT}" 
+  echo "MNT_ESC ${MNT_ESC}" 
+  echo "ALLOC ${ALLOC}"
+  echo "DATA ${DATA}"
+  echo "SYSTEM ${SYSTEM}"
+  echo "METADATA ${METADATA}"
+  echo "USAGE ${USAGE}"
+fi
+

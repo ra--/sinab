@@ -48,7 +48,8 @@ function get_oldest() {
 
 # check for space
 function checkspace() {
-        KBISFREE=`btrfsdf.sh ${1} | tail -n1 | sed -e 's/.* \([0-9]\{1,3\}\)%.*/\1/'`
+        RUNDIR=`dirname ${0}`
+        KBISFREE=`${RUNDIR}/btrfsdf ${1} | tail -n1 | sed -e 's/.* \([0-9]\{1,3\}\)%.*/\1/'`
         if [ ${KBISFREE} -ge ${MINSPACE} ] ; then
                 echo 0
         else
